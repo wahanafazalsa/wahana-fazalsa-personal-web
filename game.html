@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickMath! · Deep Calm</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue-deep: #2C4A6E;
+            --blue-soft: #4F7A9E;                
+            --sage-deep: #5F7A6B;                 
+            --cream-deep: #E5D5C5;                  
+            --gold-deep: #B9996B;                    
+            --bg-deep: #EADDD2;                        
+            --white-soft: #FFFFFF;                      
+            --text-deep: #2F4050;                        
+            --text-soft: #5A6F7F;                           
+            --correct-deep: #5F7A6B;                          
+            --wrong-deep: #C99F9F;                             
+            --shadow-deep: 0 25px 45px -15px rgba(44, 74, 110, 0.25);
+            --shadow-hover: 0 30px 50px -15px rgba(44, 74, 110, 0.35);
+            --border-deep: 1px solid rgba(185, 153, 107, 0.15);
+            --transition-smooth: all 0.4s cubic-bezier(0.2, 0.8, 0.4, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-deep);
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(44, 74, 110, 0.08) 0px, transparent 45%),
+                radial-gradient(at 80% 70%, rgba(185, 153, 107, 0.08) 0px, transparent 45%),
+                radial-gradient(at 40% 80%, rgba(95, 122, 107, 0.08) 0px, transparent 45%);
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="1" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.02"/></svg>');
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .game-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 650px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--white-soft);
+            backdrop-filter: blur(10px);
+            padding: 2.8rem 2.5rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow-deep);
+            border: var(--border-deep);
+            width: 100%;
+            text-align: center;
+            transition: var(--transition-smooth);
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.4, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, 
+                rgba(44, 74, 110, 0.02) 0%, 
+                rgba(185, 153, 107, 0.02) 50%,
+                rgba(95, 122, 107, 0.02) 100%);
+            pointer-events: none;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            color: var(--blue-deep);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 2.4rem;
+            letter-spacing: -0.5px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--blue-deep), var(--gold-deep));
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(44, 74, 110, 0.1);
+            border-radius: 20px;
+            margin: 25px 0;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        #progress {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--blue-deep), var(--gold-deep), var(--sage-deep));
+            transition: width 10s linear;
+            border-radius: 20px;
+        }
+
+        .question-number {
+            color: var(--text-soft);
+            font-weight: 400;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .question {
+            font-size: 4rem;
+            font-weight: 500;
+            margin: 15px 0 25px;
+            color: var(--text-deep);
+            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(44, 74, 110, 0.1);
+            transition: var(--transition-smooth);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        input[type="number"] {
+            width: 150px;
+            padding: 18px 20px;
+            font-size: 2rem;
+            font-weight: 300;
+            border: 2px solid rgba(44, 74, 110, 0.1);
+            border-radius: 40px;
+            text-align: center;
+            outline: none;
+            background: var(--white-soft);
+            color: var(--text-deep);
+            transition: var(--transition-smooth);
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--blue-deep);
+            box-shadow: 0 0 0 4px rgba(44, 74, 110, 0.1);
+            transform: scale(1.02);
+        }
+
+        input[type="number"]::placeholder {
+            color: #C9BFB2;
+            font-size: 1.6rem;
+            opacity: 0.6;
+        }
+
+        small {
+            color: var(--text-soft);
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+            opacity: 0.8;
+            transition: var(--transition-smooth);
+        }
+
+        button {
+            background: var(--blue-deep);
+            color: white;
+            border: none;
+            padding: 15px 38px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            margin-top: 20px;
+            box-shadow: 0 8px 20px -10px var(--blue-deep);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
+            background: var(--gold-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px -12px var(--gold-deep);
+            color: var(--text-deep);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            margin-top: 30px;
+            overflow-x: auto;
+            border-radius: 30px;
+            background: rgba(44, 74, 110, 0.05);
+            padding: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            background: var(--white-soft);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.02);
+        }
+
+        th {
+            background: var(--blue-deep);
+            color: white;
+            font-weight: 500;
+            padding: 15px 12px;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+        }
+
+        td {
+            padding: 13px 12px;
+            border-bottom: 1px solid rgba(44, 74, 110, 0.05);
+            color: var(--text-deep);
+            transition: background 0.2s ease;
+        }
+
+        tr:hover td {
+            background: rgba(185, 153, 107, 0.03);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .row-correct {
+            color: var(--correct-deep);
+            font-weight: 500;
+        }
+
+        .row-wrong {
+            color: var(--wrong-deep);
+            font-weight: 500;
+        }
+
+        .score-badge {
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--gold-deep);
+            margin: 15px 0;
+            background: rgba(44, 74, 110, 0.05);
+            display: inline-block;
+            padding: 12px 35px;
+            border-radius: 60px;
+            letter-spacing: -0.3px;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(185, 153, 107, 0.2);
+        }
+
+        .correct-highlight {
+            background: linear-gradient(145deg, transparent, rgba(95, 122, 107, 0.05), transparent);
+            transition: background 0.5s ease;
+        }
+
+        .wrong-highlight {
+            background: linear-gradient(145deg, transparent, rgba(201, 159, 159, 0.05), transparent);
+            transition: background 0.5s ease;
+        }
+
+        .fade-transition {
+            opacity: 0.95;
+            transform: scale(0.99);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .back-container {
+            margin-top: 25px;
+            width: 100%;
+            max-width: 650px;
+            z-index: 1;
+        }
+
+        .back-btn {
+            background: var(--white-soft);
+            color: var(--blue-deep);
+            border: var(--border-deep);
+            padding: 14px 28px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: var(--shadow-deep);
+            width: 100%;
+            letter-spacing: 0.2px;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: var(--sage-deep);
+            color: white;
+            transform: translateX(-3px);
+            border-color: var(--sage-deep);
+        }
+
+        .back-btn:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 500px) {
+            .card { padding: 2rem 1.5rem; }
+            h1 { font-size: 2rem; }
+            .question { font-size: 3.2rem; }
+            input[type="number"] { width: 120px; font-size: 1.8rem; padding: 15px; }
+            button { padding: 12px 30px; }
+            .score-badge { font-size: 1.6rem; padding: 10px 25px; }
+        }
+
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] { -moz-appereance: textfield; }
+
+        ::selection {
+            background: var(--gold-deep);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="card" id="game-card">
+            <div id="start-screen">
+                <h1>QuickMath!</h1>
+                <p style="color: var(--text-soft); margin: 20px 0; line-height: 1.8;">
+                    Jawab 10 soal secepat mungkin.<br />Waktu tiap soal hanya <strong style="color: var(--blue-deep);">10 detik</strong>!
+                </p>
+                <button onclick="startGame()">Mulai Bermain</button>
+            </div>
+
+            <div id="play-screen" class="hidden">
+                <div class="question-number" id="quest-number">Soal 1 / 10</div>
+                <div class="timer-bar">
+                    <div id="progress"></div>
+                </div>
+                <div class="question" id="display-question">0 + 0</div>
+                
+                <div class="input-group">
+                    <input
+                        type="number"
+                        id="answer-input"
+                        placeholder="?"
+                        autocomplete="off"
+                    >
+                    <small>⏎ Tekan Enter</small>
+                </div>
+            </div>
+
+            <div id="result-screen" class="hidden">
+                <h1>Selesai!</h1>
+                <div class="score-badge" id="final-score">Skor: 0</div>
+                <div class="result-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Soal</th>
+                                <th>Jawabanmu</th>
+                                <th>Benar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-body"></tbody>
+                    </table>
+                </div>
+                <button onclick="startGame()">Main Lagi</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-container">
+        <a href="index.html" style="text-decoration: none; width: 100%;">
+            <button class="back-btn">← Kembali ke menu utama</button>
+        </a>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 10;
+        let timerInterval;
+        let gameData = [];
+        let currentAnswer = 0;
+        let isTransitioning = false;
+
+        const startScreen = document.getElementById("start-screen");
+        const playScreen = document.getElementById("play-screen");
+        const resultScreen = document.getElementById("result-screen");
+        const inputField = document.getElementById("answer-input");
+        const progress = document.getElementById("progress");
+        const gameCard = document.getElementById("game-card");
+
+        function startGame() {
+            currentQuestion = 0;
+            score = 0;
+            gameData = [];
+            
+            startScreen.classList.add("hidden");
+            resultScreen.classList.add("hidden");
+            playScreen.classList.remove("hidden");
+            
+            playScreen.style.opacity = '0';
+            playScreen.style.transform = 'translateY(10px)';
+            setTimeout(() => {
+                playScreen.style.opacity = '1';
+                playScreen.style.transform = 'translateY(0)';
+            }, 50);
+            
+            nextQuestion();
+        }
+
+        function generateQuestion() {
+            const ops = ["+", "-", "×", "÷"];
+            let a = Math.floor(Math.random() * 10) + 1;
+            let b = Math.floor(Math.random() * 10) + 1;
+            let opIndex = Math.floor(Math.random() * 4);
+            let op = ops[opIndex];
+
+            if (op === "÷") {
+                a = a * b;
+            }
+
+            let qText = a + " " + op + " " + b;
+            let ans = 0;
+            
+            if (opIndex == 0) ans = a + b;
+            if (opIndex == 1) ans = a - b;
+            if (opIndex == 2) ans = a * b;
+            if (opIndex == 3) ans = a / b;
+
+            return { qText, ans };
+        }
+
+        function nextQuestion() {
+            if (isTransitioning) return;
+            
+            if (currentQuestion >= 10) {
+                endGame();
+                return;
+            }
+
+            currentQuestion++;
+            document.getElementById("quest-number").innerText = 'Soal ' + currentQuestion + ' / 10';
+            
+            const q = generateQuestion();
+            document.getElementById("display-question").innerText = q.qText;
+            currentAnswer = q.ans;
+
+            inputField.value = "";
+            inputField.focus();
+
+            const questionEl = document.getElementById("display-question");
+            questionEl.style.opacity = '0.7';
+            questionEl.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                questionEl.style.opacity = '1';
+                questionEl.style.transform = 'scale(1)';
+            }, 100);
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 10;
+            progress.style.transition = "none";
+            progress.style.width = "100%";
+            
+            progress.offsetHeight;
+            
+            progress.style.transition = "width 10s linear";
+            progress.style.width = "0%";
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft < 0) {
+                    processAnswer(null);
+                }
+            }, 1000);
+        }
+
+        function processAnswer(userValue) {
+            if (isTransitioning) return;
+            
+            clearInterval(timerInterval);
+            isTransitioning = true;
+            
+            const isCorrect = userValue !== null && parseFloat(userValue) === currentAnswer;
+            
+            if (userValue !== null) {
+                if (isCorrect) {
+                    gameCard.style.background = 'linear-gradient(145deg, #FFFFFF, rgba(95, 122, 107, 0.02))';
+                    setTimeout(() => {
+                        gameCard.style.background = '';
+                    }, 300);
+                } else {
+                    gameCard.style.background = 'linear-gradient(145deg, #FFFFFF, rgba(201, 159, 159, 0.02))';
+                    setTimeout(() => {
+                        gameCard.style.background = '';
+                    }, 300);
+                }
+            }
+
+            gameData.push({
+                question: document.getElementById("display-question").innerText,
+                userAnswer: userValue !== null ? userValue : "⏰",
+                correctAnswer: currentAnswer,
+                isCorrect: isCorrect
+            });
+
+            if (isCorrect) score++;
+
+            // Smooth transition ke soal berikutnya
+            setTimeout(() => {
+                isTransitioning = false;
+                if (currentQuestion < 10) {
+                    nextQuestion();
+                } else {
+                    endGame();
+                }
+            }, 200);
+        }
+
+        function endGame() {
+            // Smooth transition ke result screen
+            playScreen.style.opacity = '0';
+            playScreen.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                playScreen.classList.add("hidden");
+                resultScreen.classList.remove("hidden");
+                
+                resultScreen.style.opacity = '0';
+                resultScreen.style.transform = 'translateY(10px)';
+                
+                setTimeout(() => {
+                    resultScreen.style.opacity = '1';
+                    resultScreen.style.transform = 'translateY(0)';
+                }, 50);
+            }, 200);
+
+            document.getElementById("final-score").innerText = "Skor: " + score + " / 10";
+
+            const resultBody = document.getElementById("result-body");
+            resultBody.innerHTML = "";
+
+            gameData.forEach((data, index) => {
+                const row = document.createElement("tr");
+                const rowClass = data.isCorrect ? "row-correct" : "row-wrong";
+                row.innerHTML = `
+                    <td>${index + 1}. ${data.question}</td>
+                    <td>${data.userAnswer}</td>
+                    <td class="${rowClass}">${data.correctAnswer}</td>
+                `;
+                resultBody.appendChild(row);
+            });
+        }
+
+        inputField.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                processAnswer(inputField.value);
+            }
+        });
+
+        // Auto focus
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target === playScreen && !playScreen.classList.contains('hidden')) {
+                    inputField.focus();
+                }
+            });
+        });
+
+        observer.observe(playScreen, { attributes: true, attributeFilter: ['class'] });
+
+        window.addEventListener('load', () => {
+            gameCard.style.opacity = '0';
+            gameCard.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                gameCard.style.opacity = '1';
+                gameCard.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
